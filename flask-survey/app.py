@@ -2,11 +2,15 @@ from flask import Flask, request, render_template, redirect, flash, session
 from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey as survey
 
+# key names will use to store some things in the session;
+# put here as constants so we're guaranteed to be consistent in
+# our spelling of these
 RESPONSES_KEY = "responses"
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secretsecret"
 app.config['DEBUG_TB_INTERCEPT_REDIRECTS'] = False
+
 debug = DebugToolbarExtension(app)
 
 
@@ -27,8 +31,8 @@ def start_survey():
 
 @app.route("/answer", methods=["POST"])
 def handle_question():
-    """Save response and go to next question."""
-    
+    """Save response and redirect to next question."""
+
     choice = request.form['answer']
     responses = session[RESPONSES_KEY]
     responses.append(choice)
@@ -36,6 +40,7 @@ def handle_question():
 
     if (len(responses) == len(survey.questions)):
         return redirect("/complete")
+
     else:
         return redirect(f"/questions/{len(responses)}")
 
@@ -46,7 +51,7 @@ def show_question(qid):
     responses = session.get(RESPONSES_KEY)
 
     if (responses is None):
-        return redirect("/")
+        return redirect("/") # trying to access question page too soon
 
     if (len(responses) == len(survey.questions)):
         return redirect("/complete")
@@ -62,6 +67,6 @@ def show_question(qid):
 
 @app.route("/complete")
 def complete():
-    """Survey complete"""
+    """Survey complete. Show completion page."""
 
     return render_template("complete.html")
